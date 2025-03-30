@@ -84,7 +84,7 @@ class Detect(Resource):
             "msg": "Similarity score calculated successfully"
         }
         current_tokens = countTokens(username)
-        users.update({
+        users.update_one({
             "Username": username,
         },{
             "$set": {
@@ -93,6 +93,48 @@ class Detect(Resource):
         })
         return jsonify(retJson)
     
+
+
+
+
+class Refill(Resource):
+    def post(self):
+        postedData = request.get_json()
+
+        username = postedData["username"]
+        password = postedData["admin_pw"]
+        refill_amount = postedData["refill"]
+
+        if not UserExist(username):
+            retJson = {
+                "status": 301,
+                "msg": "Invalid Username"
+            }
+            return jsonify(retJson)
+
+        correct_pw = "abc123"
+        if not password == correct_pw:
+            retJson = {
+                "status": 304,
+                "msg": "Invalid admin password"
+            }
+            return jsonify(retJson)
+        
+        current_tokens = countTokens(username)
+        users.update({
+            "Username": username
+        },{
+            "$set":{
+                "Tokens": refill_amount+current_tokens
+            }
+        })
+        retJson = {
+            "status": 200,
+            "msg": "Refilled successfully"
+        }
+        return jsonify(retJson)
+
+
 
 
 def verifyPw(username, password):
@@ -116,94 +158,14 @@ def countTokens(username):
 
 
 
-# class Store(Resource):
-#     def post(self):
-#         postedData = request.get_json()
-#         print(postedData)
-#         print("-------------------------------------------------------------------")
-#         username = postedData['username']
-#         password= postedData['password']
-#         sentence = postedData['sentence']
-
-#         correct_pw = verifyPw(username, password)
-
-#         if not correct_pw:
-#             retJson = {
-#                 'status': 302
-#             }        
-#             return jsonify(retJson)
-        
-#         num_tokens = countTokens(username)
-#         if num_tokens <= 0:
-#             retJson = {
-#                 "status": 301
-#             }
-#             return jsonify(retJson)
-        
-#         users.update_one({
-#             "Username": username
-#         },
-#         {
-#             "$set": {
-#                 "Sentence": sentence,
-#                 "Tokens": num_tokens-1
-#             }
-#         })
-
-#         retJson = {
-#                 "status": 301,
-#                 "msg": "Sentence saved successfully"
-#             }
-#         return jsonify(retJson)
 
 
 
-# class Get(Resource):
-#     def post(self):
-#         postedData = request.get_json()
 
-#         username = postedData['username']
-#         password= postedData['password']
-
-#         correct_pw = verifyPw(username, password)
-
-#         if not correct_pw:
-#             retJson = {
-#                 'status': 302
-#             }        
-#             return jsonify(retJson)
-        
-#         num_tokens = countTokens(username)
-#         if num_tokens <= 0:
-#             retJson = {
-#                 "status": 301
-#             }
-#             return jsonify(retJson)
-        
-
-#         users.update_one({
-#             "Username": username
-#         },
-#         {
-#             "$set": {
-#                 "Tokens": num_tokens-1
-#             }
-#         })
-        
-#         sentence = users.find({
-#             "Username": username
-#         })[0]['Sentence']
-
-#         retJson = {
-#             "status": 200,
-#             "sentence": sentence
-#         }
-#         return jsonify(retJson)
-
-
-# api.add_resource(Store, '/store')
 api.add_resource(Register, '/register')
-# api.add_resource(Get, '/get')
+api.add_resource(Detect, '/det')
+api.add_resource(Refill, '/refill')
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
